@@ -3,12 +3,14 @@ let player = { step: 5 };
 let keys = { ArrowUp: false, ArrowDown: false, ArrowRight: false, ArrowLeft: false, Space: false };
 let score = 0;
 const startBtn = document.querySelector(".btn");
+
+// Event listeners for key presses
 document.addEventListener('keydown', keyDown);
 document.addEventListener('keyup', keyUp);
 
 function keyDown(event) {
     if (event.key === " ") {
-        event.preventDefault(); // Prevent default action for Space key The cause behind the duplication of the car
+        event.preventDefault(); // Prevent scrolling on space
         keys.Space = true;
     } else {
         keys[event.key] = true;
@@ -26,8 +28,9 @@ function keyUp(event) {
 function moveLines() {
     let lines = document.querySelectorAll('.lines');
     lines.forEach(item => {
-        if (item.y >= 700) {
-            item.y = item.y - 750;
+        // If line is off the bottom of the road, reset it to the top
+        if (item.y >= roadArea.offsetHeight) {
+            item.y = item.y - (roadArea.offsetHeight + 150); // Reset above the road area
         }
         item.y = item.y + player.step;
         item.style.top = item.y + 'px';
@@ -40,19 +43,28 @@ function moveEnemies(playercar) {
 
     vehicles.forEach(item => {
         let othercarb = item.getBoundingClientRect();
+        
+        // Collision Detection: Check if bounding boxes overlap
         if (!((playercarb.bottom < othercarb.top) || (playercarb.top > othercarb.bottom) || (playercarb.left > othercarb.right) || (playercarb.right < othercarb.left))) {
-            // alert("Press OK to play again");
-            alert("The Final Score is " + (score) + "\n Press OK to play again");
-            location.reload();
+            alert("The Final Score is " + (score) + "\nPress OK to play again");
+            // Stop the game and reload the page
             player.start = false;
+            location.reload(); 
+            return;
         }
-        if (item.y >= 815) {
-            // Player will earn score when the car will pass enemy car
+
+        // If enemy car passes the bottom of the road
+        if (item.y >= roadArea.offsetHeight) {
+            // Player earns score
             score = score + 1;
             startBtn.innerHTML = "Score: " + score;
+            
+            // Reposition the enemy car to the top with a new random X position
             item.y = -300;
-            item.style.left = Math.floor(Math.random() * 350) + 'px';
+            item.style.left = Math.floor(Math.random() * (roadArea.offsetWidth - 41)) + 'px'; // 41 is the car width
         }
+
+        // Move the enemy car down
         item.y = item.y + player.step;
         item.style.top = item.y + 'px';
     });
@@ -61,15 +73,20 @@ function moveEnemies(playercar) {
 function playArea() {
     let playercar = document.querySelector('.car');
     let road = roadArea.getBoundingClientRect();
+    
     if (player.start) {
         moveLines();
         moveEnemies(playercar);
-        if (keys.ArrowUp && player.y > (road.top + 80)) {
-            //we're seeing if the up arrow is pressed then player should not exceed the road top 
+
+        // Player Movement Logic
+        const playerHeight = playercar.offsetHeight;
+        const playerWidth = playercar.offsetWidth;
+
+        if (keys.ArrowUp && player.y > (road.top)) {
             player.y = player.y - player.step;
         }
 
-        if (keys.ArrowDown && player.y < (road.bottom - 150)) {
+        if (keys.ArrowDown && player.y < (road.height - playerHeight)) {
             player.y = player.y + player.step;
         }
 
@@ -77,19 +94,15 @@ function playArea() {
             player.x = player.x - player.step;
         }
 
-        if (keys.ArrowRight && player.x < (road.width - 64)) {
+        if (keys.ArrowRight && player.x < (road.width - playerWidth)) {
             player.x = player.x + player.step;
         }
 
-        if (keys.Space) {
-            // Define what happens when the Space key is pressed
-            console.log("Space key pressed");
-            // For example, you could make the car jump or boost
-        }
-
-        //based on left and right we assign position to our car i.e player
+        // Apply new position to the player car
         playercar.style.top = player.y + 'px';
         playercar.style.left = player.x + 'px';
+        
+        // Loop the game
         window.requestAnimationFrame(playArea);
     }
 }
@@ -97,45 +110,52 @@ function playArea() {
 function init() {
     player.start = true;
     window.requestAnimationFrame(playArea);
+    
+    // Clear any previous elements (in case of restart logic)
+    roadArea.innerHTML = '';
 
-    //similarly we're creating lines for the road
+    // Create road lines
     for (let i = 0; i < 5; i++) {
         let roadlines = document.createElement('div');
         roadlines.setAttribute('class', 'lines');
-        // as height of single line is 100 px and we want to add gap of 50 px
         roadlines.y = i * 150;
-
-        // and then adding that height to the top 
         roadlines.style.top = roadlines.y + 'px';
         roadArea.appendChild(roadlines);
     }
 
-    // we're creating player car dynamically and then adding it to our road area
+    // Create player car
     let playercar = document.createElement('div');
     playercar.setAttribute('class', 'car');
     roadArea.appendChild(playercar);
 
-    //we're setting our player's dimensions same as our car's so we're using playercar dimensions 
-    player.x = playercar.offsetLeft;
-    player.y = playercar.offsetTop;
+    // Initial positioning of player car (centered near bottom)
+    const roadWidth = roadArea.offsetWidth;
+    const roadHeight = roadArea.offsetHeight;
+    
+    // Set initial player properties (using dimensions from CSS)
+    // NOTE: If CSS is not yet fully loaded, these might be 0. We'll use hardcoded values based on CSS: 41px width, 75px height
+    player.x = (roadWidth / 2) - (41 / 2); // Centered
+    player.y = roadHeight - 100; // 100px from the bottom
 
-    //creating enemies 
+    playercar.style.left = player.x + 'px';
+    playercar.style.top = player.y + 'px';
+    
+    // Create enemy cars
     for (let x = 0; x < 4; x++) {
         let enemies = document.createElement('div');
         enemies.setAttribute('class', 'enemies');
-        enemies.y = ((x + 1) * 350) * -1;
+        enemies.y = ((x + 1) * 350) * -1; // Stagger initial starting positions far above
         enemies.style.top = enemies.y + 'px';
-
-        //width of road is 400 , 50 is of car 
-        enemies.style.left = Math.floor(Math.random() * 350) + 'px';
+        enemies.style.left = Math.floor(Math.random() * (roadWidth - 41)) + 'px'; // Random X position
         roadArea.appendChild(enemies);
     }
 }
 
 function startgame() {
+    // Style the start button area after game begins
     document.querySelector(".push").style.border = "5px solid rgb(86,50,57)";
     startBtn.style.backgroundColor = "rgb(86,50,57)";
     startBtn.style.cursor = "not-allowed";
-    startBtn.innerHTML = "Use Arrow keys to Navigate";
+    startBtn.innerHTML = "Score: 0"; // Display initial score
     init();
 }
