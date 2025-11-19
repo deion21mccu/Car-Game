@@ -1,33 +1,32 @@
 * {
     margin: 0;
     padding: 0;
+    box-sizing: border-box; /* Added for easier layout control */
     background-color: rgb(118, 189, 159);
 }
 
-/* html, body {
-    height: 100%;
-    margin: 0;
-  } */
 body {
-    overflow: hidden;
-
+    overflow: hidden; /* Prevent scrolling */
 }
 
 .container {
     background-color: rgb(118, 189, 159);
-    background-size: cover;
-    min-height: 99%;
+    min-height: 100vh; /* Use 100vh for full height */
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
 }
 
 .road {
     background-color: black;
-    height: 93vh;
+    height: 90vh; /* Main playing area height */
     width: 400px;
-    margin: auto;
     position: relative;
     border-left: 5px white dashed;
     border-right: 5px white dashed;
     z-index: 1;
+    overflow: hidden; /* Keep all moving elements within the road bounds */
 }
 
 .lines {
@@ -35,49 +34,50 @@ body {
     height: 100px;
     width: 10px;
     position: absolute;
-    margin-left: 195px;
-    z-index: -1;
+    margin-left: 195px; /* Center the lines */
+    z-index: 0; /* Keep lines behind the cars */
 }
 
+/* Player Car */
 .car {
     height: 75px;
     width: 41px;
     position: absolute;
-    background-color: rgb(0, 0, 0);
-    background-image: url("assets/car.png");
+    background-color: rgb(0, 0, 0); 
+    background-image: url("assets/car.png"); /* ASSUMES: /assets/car.png */
     background-size: cover;
-    bottom: 120px;
-    background-position-x: center;
-    z-index: -1;
+    background-position: center;
+    z-index: 2; /* Ensure player car is above everything */
 }
 
+/* Enemy Car */
 .enemies {
     height: 90px;
     width: 41px;
     position: absolute;
     background-color: rgb(0, 0, 0);
-    background-image: url("assets/enemycar.png");
-    -webkit-transform: scaleY(-1);
+    background-image: url("assets/enemycar.png"); /* ASSUMES: /assets/enemycar.png */
+    -webkit-transform: scaleY(-1); /* Flips the enemy car image */
     background-size: cover;
-    bottom: 120px;
-    background-position-x: center;
-    z-index: -1;
+    background-position: center;
+    z-index: 1; /* Above lines, below player car */
 }
 
 .btn {
     background-color: crimson;
     color: #fff;
-    border: 1px solid;
+    border: none;
     padding: 10px;
     height: 100%;
     width: 100%;
     outline: none;
-    margin: auto;
+    font-size: 1.2rem;
+    cursor: pointer;
 }
 
 .push {
     height: 50px;
-    width: 401px;
-    margin: auto;
+    width: 401px; /* Matches road width + 1px for border alignment */
     border: 5px solid crimson;
+    margin-top: 10px;
 }
